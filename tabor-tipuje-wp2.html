@@ -1,0 +1,1938 @@
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<!-- Firebase compat (works in WordPress) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+(function() {
+  var firebaseConfig = {
+    apiKey: "AIzaSyCH4yaaTOQVNv3iHjJ5R222TpwHnZYhm0g",
+    authDomain: "taborujeme-d212d.firebaseapp.com",
+    databaseURL: "https://taborujeme-d212d-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "taborujeme-d212d",
+    storageBucket: "taborujeme-d212d.firebasestorage.app",
+    messagingSenderId: "1037337853166",
+    appId: "1:1037337853166:web:d5af4c16dd32cfb4d4c7ff"
+  };
+  try {
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.database();
+    window.$fbReady = true;
+    window.$set = function(path, data) { return db.ref(path).set(data); };
+    window.$get = function(path) { return db.ref(path).get(); };
+    window.$ref = function(path) { return db.ref(path); };
+    db.ref('tabortipuje').on('value', function(snap) {
+      window.$state = snap.val() || {};
+      if (window.$onUpdate) window.$onUpdate(window.$state);
+    });
+  } catch(e) {
+    console.log('Firebase error:', e);
+    window.$fbReady = false;
+  }
+})();
+</script>
+
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #222536;
+  --border: rgba(255,255,255,0.07);
+  --text: #f0f0f5;
+  --muted: #6b7090;
+  --accent: #6c63ff;
+  --accent2: #ff6b9d;
+  --green: #00d68f;
+  --yellow: #ffd166;
+  --orange: #ff9a3c;
+  --red: #ff4d6d;
+  --blue: #4cc9f0;
+
+  /* Camp colors */
+  --camp1: #ff6b9d;
+  --camp2: #c77dff;
+  --camp3: #6c63ff;
+  --camp4: #4cc9f0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  background: #080a10;
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  min-height: 100svh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Desktop: center app like a phone */
+.app-shell {
+  max-width: 460px;
+  min-height: 100svh;
+  margin: 0 auto;
+  background: var(--bg);
+  position: relative;
+  box-shadow: 0 0 60px rgba(0,0,0,0.8);
+}
+
+/* SCREENS */
+.screen { display: none; flex-direction: column; min-height: 100svh; width: 100%; }
+.screen.active { display: flex; }
+
+/* ===== ONBOARDING ===== */
+#screen-onboard {
+  background: linear-gradient(160deg, #0f1117 0%, #1a0a2e 50%, #0f1117 100%);
+  padding: 40px 24px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.onboard-logo {
+  font-size: 4rem;
+  margin-bottom: 8px;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+.onboard-title {
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--camp1), var(--camp2), var(--camp3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.onboard-sub {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 40px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* CHARACTER GRID */
+.char-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.char-tile {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s cubic-bezier(.34,1.56,.64,1);
+  position: relative;
+  overflow: hidden;
+}
+.char-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--camp1), var(--camp3));
+  opacity: 0;
+  transition: opacity .2s;
+}
+.char-tile:hover, .char-tile.sel {
+  border-color: var(--accent);
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(108,99,255,0.3);
+}
+.char-tile.sel::before { opacity: 0.1; }
+.char-tile.taken { opacity: 0.4; cursor: not-allowed; }
+.char-tile.taken:hover { transform: none; box-shadow: none; }
+
+.char-tile-emoji { font-size: 2rem; display: block; margin-bottom: 4px; position: relative; z-index: 1; }
+.char-tile-name { font-size: 0.62rem; font-weight: 800; color: var(--text); position: relative; z-index: 1; line-height: 1.2; }
+.char-tile-house {
+  font-size: 0.55rem;
+  font-weight: 700;
+  margin-top: 3px;
+  padding: 2px 6px;
+  border-radius: 20px;
+  display: inline-block;
+  position: relative; z-index: 1;
+}
+.h-g { background: rgba(255,107,107,0.2); color: #ff6b6b; }
+.h-h { background: rgba(255,209,102,0.2); color: #ffd166; }
+.h-r { background: rgba(76,201,240,0.2); color: #4cc9f0; }
+.h-s { background: rgba(0,214,143,0.2); color: #00d68f; }
+
+.taken-tag {
+  position: absolute;
+  top: 6px; right: 6px;
+  background: rgba(255,77,109,0.9);
+  color: white;
+  font-size: 0.5rem;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 4px;
+  z-index: 2;
+  text-transform: uppercase;
+}
+
+/* PIN */
+.pin-section {
+  width: 100%;
+  margin-bottom: 20px;
+  display: none;
+}
+.pin-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  text-align: left;
+}
+.pin-dots {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.pin-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--border);
+  border: 2px solid var(--surface2);
+  transition: all .2s;
+}
+.pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.num-btn {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  transition: all .15s;
+  font-family: 'Nunito', sans-serif;
+  text-align: center;
+}
+.num-btn:active { background: var(--accent); border-color: var(--accent); transform: scale(0.95); }
+.num-btn.del { font-size: 1rem; }
+.num-btn.go { background: linear-gradient(135deg, var(--accent), var(--camp2)); color: white; border-color: transparent; }
+
+/* ===== MAIN APP ===== */
+#screen-app {
+  background: var(--bg);
+  padding-bottom: 80px;
+}
+
+/* TOP BAR */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-bubble {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--camp2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.topbar-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+.topbar-sub {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.beer-chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--yellow);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* BOTTOM NAV */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 460px;
+  background: rgba(26,29,39,0.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 100;
+  padding: 8px 0 env(safe-area-inset-bottom);
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 4px;
+  cursor: pointer;
+  transition: all .2s;
+  color: var(--muted);
+}
+.nav-item.active { color: var(--accent); }
+.nav-icon { font-size: 1.3rem; line-height: 1; }
+.nav-label { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* PAGES */
+.page { display: none; padding: 16px 20px; }
+.page.active { display: block; }
+
+/* SECTION HEADING */
+.section-head {
+  margin-bottom: 16px;
+}
+.section-head h2 {
+  font-size: 1.4rem;
+  font-weight: 900;
+}
+.section-head p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* MATCH CARDS */
+.match-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  transition: border-color .2s;
+}
+.match-card.has-bet { border-color: rgba(108,99,255,0.4); }
+
+.match-head {
+  padding: 12px 16px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.match-time {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.match-pill {
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.pill-live { background: rgba(255,77,109,0.2); color: var(--red); animation: blink 1.2s infinite; }
+.pill-upcoming { background: rgba(108,99,255,0.15); color: var(--accent); }
+.pill-done { background: rgba(0,214,143,0.15); color: var(--green); }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.5} }
+
+.match-teams {
+  padding: 4px 16px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.match-team { flex: 1; text-align: center; }
+.match-flag { font-size: 3rem; display: block; line-height: 1; margin-bottom: 4px; }
+.match-team-name {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.match-team-name.cz { color: var(--camp1); }
+
+.match-score-block { text-align: center; min-width: 72px; }
+.match-score {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: 2px;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.match-vs { font-size: 0.8rem; font-weight: 700; color: var(--muted); }
+.match-ot { font-size: 0.65rem; color: var(--muted); font-weight: 600; margin-top: 2px; }
+
+/* BET AREA */
+.bet-area {
+  border-top: 1px solid var(--border);
+  padding: 14px 16px;
+}
+.bet-area-title {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 12px;
+}
+
+.score-inputs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.score-input-wrap { flex: 1; }
+.score-input-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 4px;
+  text-align: center;
+  display: block;
+}
+.score-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 8px;
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: border-color .2s;
+}
+.score-input:focus { border-color: var(--accent); }
+.score-input:disabled { opacity: 0.5; }
+.score-sep {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--muted);
+  padding-top: 18px;
+}
+
+.scorer-section { margin-top: 4px; }
+.scorer-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+.scorer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.scorer-chip {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+  color: var(--text);
+}
+.scorer-chip:hover { border-color: var(--yellow); }
+.scorer-chip.sel { background: rgba(255,209,102,0.15); border-color: var(--yellow); color: var(--yellow); }
+.scorer-chip.locked { opacity: 0.5; pointer-events: none; }
+
+.submit-bet-btn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, var(--accent), var(--camp2));
+  border: none;
+  border-radius: 14px;
+  color: white;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: all .2s;
+  letter-spacing: 0.3px;
+}
+.submit-bet-btn:hover { transform: scale(1.02); box-shadow: 0 6px 20px rgba(108,99,255,0.4); }
+.submit-bet-btn:disabled { opacity: 0.5; transform: none; box-shadow: none; }
+
+/* My bet preview */
+.my-bet-preview {
+  background: rgba(108,99,255,0.1);
+  border: 1px solid rgba(108,99,255,0.3);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.edit-bet-btn {
+  font-size: 0.7rem;
+  background: none;
+  border: 1px solid rgba(108,99,255,0.4);
+  border-radius: 8px;
+  color: var(--accent);
+  padding: 3px 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* LOADING */
+.loading-card {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 32px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 0.85rem; font-weight: 700; color: var(--muted); }
+
+/* NO MATCHES */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+}
+.empty-icon { font-size: 3.5rem; margin-bottom: 12px; }
+.empty-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; }
+.empty-sub { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+
+/* LEADERBOARD */
+.lb-card {
+  background: var(--surface);
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.lb-top {
+  background: linear-gradient(135deg, var(--accent), var(--camp2));
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.lb-top-rank { font-size: 2rem; }
+.lb-top-info { flex: 1; }
+.lb-top-name { font-size: 1.1rem; font-weight: 900; color: white; }
+.lb-top-sub { font-size: 0.75rem; color: rgba(255,255,255,0.75); font-weight: 600; }
+.lb-top-score { font-size: 1.8rem; font-weight: 900; color: white; font-family: 'Space Grotesk', sans-serif; }
+
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.lb-row:last-child { border-bottom: none; }
+.lb-row-rank {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--muted);
+  width: 24px;
+  text-align: center;
+}
+.lb-row-emoji { font-size: 1.5rem; }
+.lb-row-info { flex: 1; }
+.lb-row-name { font-size: 0.9rem; font-weight: 800; }
+.lb-row-sub { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.lb-row-score {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* DEBTS */
+.debt-card {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.debt-avatars {
+  display: flex;
+  font-size: 1.4rem;
+  gap: 2px;
+}
+.debt-info { flex: 1; font-size: 0.85rem; font-weight: 700; }
+.debt-names { color: var(--text); }
+.debt-amount { font-size: 1rem; font-weight: 900; color: var(--yellow); font-family: 'Space Grotesk', sans-serif; }
+.settle-btn {
+  padding: 6px 14px;
+  background: rgba(0,214,143,0.15);
+  border: 1px solid rgba(0,214,143,0.3);
+  border-radius: 20px;
+  color: var(--green);
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .2s;
+}
+.settle-btn:hover { background: rgba(0,214,143,0.3); }
+
+/* DIARY */
+.diary-card {
+  background: var(--surface);
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.diary-header {
+  background: linear-gradient(135deg, #1a0a2e, #2d1b4e);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.diary-date { font-size: 0.72rem; font-weight: 700; color: var(--camp2); text-transform: uppercase; letter-spacing: 1px; }
+.diary-title { font-size: 1rem; font-weight: 800; margin-top: 2px; }
+.diary-body {
+  padding: 20px;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: rgba(240,240,245,0.85);
+  font-weight: 500;
+  white-space: pre-line;
+}
+.gen-diary-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #1a0a2e, var(--camp3));
+  border: 1px solid rgba(108,99,255,0.3);
+  border-radius: 16px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.gen-diary-btn:hover { box-shadow: 0 0 20px rgba(108,99,255,0.3); }
+.gen-diary-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 96px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  max-width: 420px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 12px 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  z-index: 999;
+  opacity: 0;
+  transition: all .3s;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  max-width: 90vw;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* REFRESH BTN */
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 12px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .2s;
+}
+.refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ADMIN PAGE */
+.admin-section {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.admin-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+.admin-select, .admin-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+  outline: none;
+  transition: border-color .2s;
+}
+.admin-select:focus, .admin-input:focus { border-color: var(--accent); }
+.admin-score-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.admin-score-row input { flex: 1; text-align: center; }
+.admin-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all .2s;
+  margin-bottom: 8px;
+}
+.admin-btn-primary { background: linear-gradient(135deg, var(--accent), var(--camp2)); color: white; }
+.admin-btn-green { background: rgba(0,214,143,0.15); border: 1px solid rgba(0,214,143,0.3); color: var(--green); }
+.admin-btn-red { background: rgba(255,77,109,0.1); border: 1px solid rgba(255,77,109,0.3); color: var(--red); }
+
+/* BALANCE BADGE */
+.balance-pos { color: var(--green); }
+.balance-neg { color: var(--red); }
+.balance-zero { color: var(--muted); }
+
+/* HOUSE BAR */
+.house-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.house-bar::-webkit-scrollbar { display: none; }
+.house-chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+  text-align: center;
+}
+.house-chip .pts { display: block; font-size: 1.1rem; font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+</style>
+
+<!-- ===== ONBOARDING ===== -->
+<div class="app-shell">
+<div class="screen active" id="screen-onboard">
+  <div id="step-char">
+    <div class="onboard-logo">🏒</div>
+    <div class="onboard-title">Tábor Tipuje</div>
+    <div class="onboard-sub">MS Hokej 2026 · Švýcarsko</div>
+    <div class="char-grid" id="charGrid"></div>
+    <button class="submit-bet-btn" id="charNextBtn" onclick="goToPin()" disabled style="width:100%;max-width:380px">
+      Vybrat postavu →
+    </button>
+  </div>
+
+  <div id="step-pin" style="display:none;width:100%;max-width:380px">
+    <div style="text-align:center;margin-bottom:24px">
+      <div id="pinCharEmoji" style="font-size:3rem;margin-bottom:8px"></div>
+      <div style="font-size:1.2rem;font-weight:900" id="pinCharName"></div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-top:4px">Nastav si PIN (4 číslice)</div>
+    </div>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+      <div class="pin-dot" id="dot3"></div>
+    </div>
+    <div class="numpad">
+      <button class="num-btn" onclick="pinPress(1)">1</button>
+      <button class="num-btn" onclick="pinPress(2)">2</button>
+      <button class="num-btn" onclick="pinPress(3)">3</button>
+      <button class="num-btn" onclick="pinPress(4)">4</button>
+      <button class="num-btn" onclick="pinPress(5)">5</button>
+      <button class="num-btn" onclick="pinPress(6)">6</button>
+      <button class="num-btn" onclick="pinPress(7)">7</button>
+      <button class="num-btn" onclick="pinPress(8)">8</button>
+      <button class="num-btn" onclick="pinPress(9)">9</button>
+      <button class="num-btn del" onclick="pinBack()">⌫</button>
+      <button class="num-btn" onclick="pinPress(0)">0</button>
+      <button class="num-btn go" id="pinGoBtn" onclick="confirmPin()" disabled>✓</button>
+    </div>
+    <div style="text-align:center;margin-top:16px">
+      <button onclick="backToChar()" style="background:none;border:none;color:var(--muted);font-size:0.8rem;cursor:pointer;font-family:inherit;font-weight:700">← Zpět</button>
+    </div>
+  </div>
+
+  <!-- PIN VERIFY (returning user) -->
+  <div id="step-verify" style="display:none;width:100%;max-width:380px">
+    <div style="text-align:center;margin-bottom:24px">
+      <div id="verifyEmoji" style="font-size:3rem;margin-bottom:8px"></div>
+      <div style="font-size:1.2rem;font-weight:900" id="verifyName"></div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-top:4px">Zadej svůj PIN</div>
+    </div>
+    <div class="pin-dots" id="verifyDots">
+      <div class="pin-dot" id="vdot0"></div>
+      <div class="pin-dot" id="vdot1"></div>
+      <div class="pin-dot" id="vdot2"></div>
+      <div class="pin-dot" id="vdot3"></div>
+    </div>
+    <div class="numpad">
+      <button class="num-btn" onclick="vPinPress(1)">1</button>
+      <button class="num-btn" onclick="vPinPress(2)">2</button>
+      <button class="num-btn" onclick="vPinPress(3)">3</button>
+      <button class="num-btn" onclick="vPinPress(4)">4</button>
+      <button class="num-btn" onclick="vPinPress(5)">5</button>
+      <button class="num-btn" onclick="vPinPress(6)">6</button>
+      <button class="num-btn" onclick="vPinPress(7)">7</button>
+      <button class="num-btn" onclick="vPinPress(8)">8</button>
+      <button class="num-btn" onclick="vPinPress(9)">9</button>
+      <button class="num-btn del" onclick="vPinBack()">⌫</button>
+      <button class="num-btn" onclick="vPinPress(0)">0</button>
+      <button class="num-btn go" id="vPinGoBtn" onclick="verifyPin()" disabled>✓</button>
+    </div>
+    <div style="text-align:center;margin-top:16px">
+      <button onclick="showCharStep()" style="background:none;border:none;color:var(--muted);font-size:0.8rem;cursor:pointer;font-family:inherit;font-weight:700">← Jiná postava</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div class="screen" id="screen-app">
+
+  <div class="topbar">
+    <div class="topbar-left" onclick="logout()">
+      <div class="avatar-bubble" id="appAvatar"></div>
+      <div>
+        <div class="topbar-name" id="appName"></div>
+        <div class="topbar-sub" id="appHouse"></div>
+      </div>
+    </div>
+    <div class="beer-chip" id="beerChip">🍺 0</div>
+  </div>
+
+  <!-- PAGES -->
+  <div class="page active" id="page-home">
+    <div class="section-head">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2>Dnešní zápasy 🏒</h2>
+        <button class="refresh-btn" onclick="loadMatches(true)">↻ Načíst</button>
+      </div>
+      <p id="matchDateLabel">Načítám zápasy z internetu...</p>
+    </div>
+    <div id="matchesContainer"></div>
+  </div>
+
+  <div class="page" id="page-lb">
+    <div class="section-head">
+      <h2>Žebříček 🏆</h2>
+      <p>Kdo tipuje nejlépe</p>
+    </div>
+    <div class="house-bar" id="houseBar"></div>
+    <div id="lbContainer"></div>
+  </div>
+
+  <div class="page" id="page-debts">
+    <div class="section-head">
+      <h2>Dluhy 💸</h2>
+      <p>Kdo komu dluží pivo</p>
+    </div>
+    <div id="debtsContainer"></div>
+  </div>
+
+  <div class="page" id="page-diary">
+    <div class="section-head">
+      <h2>Deník ✒️</h2>
+      <p>Bradavické zpravodajství</p>
+    </div>
+    <button class="gen-diary-btn" id="genDiaryBtn" onclick="generateDiary()">
+      🪄 Vygenerovat dnešní zápis
+    </button>
+    <div id="diaryContainer"></div>
+  </div>
+
+  <div class="page" id="page-admin">
+    <div class="section-head">
+      <h2>Admin 🔮</h2>
+      <p>Zadávání výsledků a správa</p>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-title">Zadat výsledek zápasu</div>
+      <select class="admin-select" id="adminMatchSel"></select>
+      <div class="admin-score-row">
+        <input type="number" class="admin-input" id="adminS1" placeholder="0" min="0" max="25"/>
+        <span style="color:var(--muted);font-weight:900;font-size:1.2rem">:</span>
+        <input type="number" class="admin-input" id="adminS2" placeholder="0" min="0" max="25"/>
+        <label style="font-size:0.8rem;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:4px">
+          <input type="checkbox" id="adminOT" style="width:auto"/> P/N
+        </label>
+      </div>
+      <button class="admin-btn admin-btn-primary" onclick="adminSaveResult()">💾 Uložit výsledek</button>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-title">Vyhodnotit sázky</div>
+      <button class="admin-btn admin-btn-green" onclick="adminEvaluate()">⚡ Vyhodnotit všechny sázky</button>
+      <p style="font-size:0.75rem;color:var(--muted)">Zpracuje sázky pro zápasy s výsledkem.</p>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-title" style="color:var(--red)">Danger zone</div>
+      <button class="admin-btn admin-btn-red" onclick="adminReset()">🗑️ Reset všech dat</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="navTo('home')">
+      <span class="nav-icon">🏒</span>
+      <span class="nav-label">Zápasy</span>
+    </div>
+    <div class="nav-item" onclick="navTo('lb')">
+      <span class="nav-icon">🏆</span>
+      <span class="nav-label">Žebříček</span>
+    </div>
+    <div class="nav-item" onclick="navTo('debts')">
+      <span class="nav-icon">💸</span>
+      <span class="nav-label">Dluhy</span>
+    </div>
+    <div class="nav-item" onclick="navTo('diary')">
+      <span class="nav-icon">✒️</span>
+      <span class="nav-label">Deník</span>
+    </div>
+    <div class="nav-item" onclick="navTo('admin')">
+      <span class="nav-icon">🔮</span>
+      <span class="nav-label">Admin</span>
+    </div>
+  </nav>
+</div>
+
+</div><!-- /app-shell -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ================================================================
+// CHARACTERS
+// ================================================================
+const CHARS = [
+  { id:'harry',  name:'Harry Potter',    short:'Harry',   emoji:'⚡', house:'Nebelvír',  hk:'g' },
+  { id:'herm',   name:'Hermiona',        short:'Hermiona',emoji:'📚', house:'Nebelvír',  hk:'g' },
+  { id:'ron',    name:'Ron Weasley',     short:'Ron',     emoji:'♟️', house:'Nebelvír',  hk:'g' },
+  { id:'ginny',  name:'Ginny',           short:'Ginny',   emoji:'🔥', house:'Nebelvír',  hk:'g' },
+  { id:'neville',name:'Neville',         short:'Neville', emoji:'🌿', house:'Nebelvír',  hk:'g' },
+  { id:'luna',   name:'Luna Lovegood',   short:'Luna',    emoji:'🌙', house:'Havraspár', hk:'r' },
+  { id:'draco',  name:'Draco Malfoy',    short:'Draco',   emoji:'🐍', house:'Zmijozel',  hk:'s' },
+  { id:'fred',   name:'Fred Weasley',    short:'Fred',    emoji:'🎆', house:'Nebelvír',  hk:'g' },
+  { id:'george', name:'George Weasley',  short:'George',  emoji:'🎇', house:'Nebelvír',  hk:'g' },
+  { id:'cho',    name:'Čo Chang',        short:'Čo',      emoji:'🌸', house:'Havraspár', hk:'r' },
+  { id:'cedric', name:'Cedric Diggory',  short:'Cedric',  emoji:'🏆', house:'Mrzimor',   hk:'h' },
+  { id:'hagrid', name:'Hagrid',          short:'Hagrid',  emoji:'🌲', house:'Kamarád',   hk:'h' },
+  { id:'sirius', name:'Sirius Black',    short:'Sirius',  emoji:'🐾', house:'Nebelvír',  hk:'g' },
+  { id:'tonks',  name:'Tonks',           short:'Tonks',   emoji:'🎨', house:'Mrzimor',   hk:'h' },
+  { id:'fleur',  name:'Fleur',           short:'Fleur',   emoji:'💐', house:'Beauxbâtons',hk:'r' },
+  { id:'viktor', name:'Viktor Krum',     short:'Viktor',  emoji:'🦅', house:'Durmstrang', hk:'s' },
+];
+const HCLASS = { g:'h-g', h:'h-h', r:'h-r', s:'h-s' };
+const HNAME = { g:'Nebelvír', h:'Mrzimor', r:'Havraspár', s:'Zmijozel' };
+
+// ================================================================
+// ALL MATCHES (MS 2026 group B + highlights)
+// ================================================================
+const ALL_MATCHES = [
+  { id:'cz-dk', date:'15.5.', time:'20:20', home:'Česko',    away:'Dánsko',    homeFl:'🇨🇿', awayFl:'🇩🇰' },
+  { id:'ca-se', date:'15.5.', time:'16:20', home:'Kanada',   away:'Švédsko',   homeFl:'🇨🇦', awayFl:'🇸🇪' },
+  { id:'fi-de', date:'15.5.', time:'16:20', home:'Finsko',   away:'Německo',   homeFl:'🇫🇮', awayFl:'🇩🇪' },
+  { id:'us-ch', date:'15.5.', time:'20:20', home:'USA',      away:'Švýcarsko', homeFl:'🇺🇸', awayFl:'🇨🇭' },
+  { id:'sk-no', date:'16.5.', time:'12:20', home:'Slovensko',away:'Norsko',    homeFl:'🇸🇰', awayFl:'🇳🇴' },
+  { id:'si-cz', date:'16.5.', time:'20:20', home:'Slovinsko',away:'Česko',     homeFl:'🇸🇮', awayFl:'🇨🇿' },
+  { id:'it-ca', date:'16.5.', time:'16:20', home:'Itálie',   away:'Kanada',    homeFl:'🇮🇹', awayFl:'🇨🇦' },
+  { id:'se-cz', date:'18.5.', time:'20:20', home:'Švédsko',  away:'Česko',     homeFl:'🇸🇪', awayFl:'🇨🇿' },
+  { id:'cz-sk', date:'23.5.', time:'16:20', home:'Česko',    away:'Slovensko', homeFl:'🇨🇿', awayFl:'🇸🇰' },
+  { id:'no-cz', date:'25.5.', time:'16:20', home:'Norsko',   away:'Česko',     homeFl:'🇳🇴', awayFl:'🇨🇿' },
+  { id:'ca-cz', date:'27.5.', time:'20:20', home:'Kanada',   away:'Česko',     homeFl:'🇨🇦', awayFl:'🇨🇿' },
+  { id:'cz-it', date:'29.5.', time:'16:20', home:'Česko',    away:'Itálie',    homeFl:'🇨🇿', awayFl:'🇮🇹' },
+];
+
+// Key players per matchup (for scorer tip)
+const MATCH_PLAYERS = {
+  'cz-dk': ['Červenka','Smejkal','Krejčí','Kubalík','Jaškin','Pastrňák','Jørgensen','Bjørnsen'],
+  'ca-se': ['Crosby','Celebrini','Tavares','Forsling','Ekman-Larsson','Burakovsky'],
+  'fi-de': ['Barkov','Laine','Granlund','Draisaitl','Müller','Seider'],
+  'us-ch': ['Tkachuk','Hughes','Hischier','Niederreiter','Stüssi'],
+  'sk-no': ['Slafkovský','Tatar','Aho','Faksa','Thoresen'],
+  'si-cz': ['Červenka','Smejkal','Kopitar','Ticar','Ograjenšek'],
+  'it-ca': ['Crosby','Celebrini','Insam','Kostner','Glira'],
+  'se-cz': ['Červenka','Smejkal','Forsling','Ekman-Larsson','Burakovsky'],
+  'cz-sk': ['Červenka','Smejkal','Slafkovský','Tatar','Sukeľ'],
+  'no-cz': ['Červenka','Smejkal','Thoresen','Röymark'],
+  'ca-cz': ['Crosby','Celebrini','Červenka','Smejkal','Pastrňák'],
+  'cz-it': ['Červenka','Smejkal','Kubalík','Insam','Kostner'],
+};
+
+// ================================================================
+// STATE
+// ================================================================
+let $state = {};
+let currentChar = localStorage.getItem('tt_char') || null;
+let todayMatches = [];
+let loadingMatches = false;
+
+// PIN handling
+let pinEntry = '';
+let vPinEntry = '';
+let selectedChar = null;
+
+// ================================================================
+// SAVE / LOAD
+// ================================================================
+function fbSave(path, data) {
+  if (window.$fbReady) {
+    window.$set('tabortipuje/' + path, data);
+  } else {
+    const s = JSON.parse(localStorage.getItem('tt_local') || '{}');
+    const parts = path.split('/');
+    let cur = s;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!cur[parts[i]]) cur[parts[i]] = {};
+      cur = cur[parts[i]];
+    }
+    cur[parts[parts.length-1]] = data;
+    localStorage.setItem('tt_local', JSON.stringify(s));
+    $state = s;
+    renderApp();
+  }
+}
+
+function getS(path) {
+  const parts = path.split('/');
+  let cur = $state;
+  for (const p of parts) { if (cur == null) return null; cur = cur[p]; }
+  return cur;
+}
+
+window.$onUpdate = function(data) {
+  $state = data || {};
+  renderApp();
+};
+
+// Load local state if no firebase
+setTimeout(() => {
+  if (!window.$fbReady) {
+    try { $state = JSON.parse(localStorage.getItem('tt_local') || '{}'); } catch(e) {}
+    initApp();
+  } else {
+    initApp();
+  }
+}, 1500);
+
+// ================================================================
+// INIT
+// ================================================================
+function initApp() {
+  renderCharGrid();
+  // Auto-login if returning user
+  if (currentChar) {
+    const players = getS('players') || {};
+    if (players[currentChar]) {
+      showVerifyStep(currentChar);
+    } else {
+      showCharStep();
+    }
+  }
+}
+
+// ================================================================
+// ONBOARDING
+// ================================================================
+function renderCharGrid() {
+  const players = getS('players') || {};
+  document.getElementById('charGrid').innerHTML = CHARS.map(c => {
+    const isRegistered = !!players[c.id]; // registered = has PIN
+    const isMe = c.id === currentChar;
+    // Registered chars show as available (you verify with PIN), not blocked
+    return `<div class="char-tile ${isMe ? 'sel' : ''}" id="ct-${c.id}" onclick="selectCharTile('${c.id}')">
+      ${isRegistered ? `<div class="taken-tag" style="background:rgba(108,99,255,0.9)">má PIN</div>` : ''}
+      <span class="char-tile-emoji">${c.emoji}</span>
+      <div class="char-tile-name">${c.short}</div>
+      <span class="char-tile-house ${HCLASS[c.hk]}">${c.house}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectCharTile(id) {
+  selectedChar = id;
+  document.querySelectorAll('.char-tile').forEach(t => t.classList.remove('sel'));
+  document.getElementById('ct-' + id)?.classList.add('sel');
+  const c = CHARS.find(x => x.id === id);
+  const players = getS('players') || {};
+  // If already registered → go straight to verify (no re-registration)
+  if (players[id]) {
+    showVerifyStep(id);
+    return;
+  }
+  document.getElementById('charNextBtn').disabled = false;
+  document.getElementById('charNextBtn').textContent = `${c?.emoji} Jsem ${c?.short} →`;
+}
+
+function showCharStep() {
+  document.getElementById('step-char').style.display = '';
+  document.getElementById('step-pin').style.display = 'none';
+  document.getElementById('step-verify').style.display = 'none';
+}
+
+function goToPin() {
+  if (!selectedChar) return;
+  // Prevent re-registration of taken characters
+  const players = getS('players') || {};
+  if (players[selectedChar]) {
+    showVerifyStep(selectedChar);
+    return;
+  }
+  const c = CHARS.find(x => x.id === selectedChar);
+  document.getElementById('pinCharEmoji').textContent = c.emoji;
+  document.getElementById('pinCharName').textContent = c.name;
+  pinEntry = '';
+  updatePinDots('pinDots', 'dot', pinEntry);
+  document.getElementById('step-char').style.display = 'none';
+  document.getElementById('step-pin').style.display = '';
+  document.getElementById('step-verify').style.display = 'none';
+}
+
+function backToChar() {
+  document.getElementById('step-char').style.display = '';
+  document.getElementById('step-pin').style.display = 'none';
+}
+
+function pinPress(n) {
+  if (pinEntry.length >= 4) return;
+  pinEntry += n;
+  updatePinDots('pinDots', 'dot', pinEntry);
+  if (pinEntry.length === 4) document.getElementById('pinGoBtn').disabled = false;
+}
+function pinBack() {
+  pinEntry = pinEntry.slice(0, -1);
+  updatePinDots('pinDots', 'dot', pinEntry);
+  document.getElementById('pinGoBtn').disabled = pinEntry.length < 4;
+}
+function confirmPin() {
+  if (pinEntry.length !== 4) return;
+  const c = CHARS.find(x => x.id === selectedChar);
+  // Save player
+  fbSave('players/' + selectedChar, { charId: selectedChar, name: c.name, emoji: c.emoji, house: c.house, hk: c.hk, pin: pinEntry });
+  currentChar = selectedChar;
+  localStorage.setItem('tt_char', currentChar);
+  enterApp();
+}
+
+// VERIFY
+function showVerifyStep(charId) {
+  const c = CHARS.find(x => x.id === charId);
+  selectedChar = charId;
+  document.getElementById('verifyEmoji').textContent = c.emoji;
+  document.getElementById('verifyName').textContent = c.name;
+  vPinEntry = '';
+  updatePinDots('verifyDots', 'vdot', vPinEntry);
+  document.getElementById('step-char').style.display = 'none';
+  document.getElementById('step-pin').style.display = 'none';
+  document.getElementById('step-verify').style.display = '';
+}
+
+function vPinPress(n) {
+  if (vPinEntry.length >= 4) return;
+  vPinEntry += n;
+  updatePinDots('verifyDots', 'vdot', vPinEntry);
+  if (vPinEntry.length === 4) document.getElementById('vPinGoBtn').disabled = false;
+}
+function vPinBack() {
+  vPinEntry = vPinEntry.slice(0, -1);
+  updatePinDots('verifyDots', 'vdot', vPinEntry);
+  document.getElementById('vPinGoBtn').disabled = vPinEntry.length < 4;
+}
+function verifyPin() {
+  const players = getS('players') || {};
+  const p = players[selectedChar];
+  if (!p || String(p.pin) !== String(vPinEntry)) {
+    vPinEntry = '';
+    updatePinDots('verifyDots', 'vdot', vPinEntry);
+    document.getElementById('vPinGoBtn').disabled = true;
+    showToast('❌ Špatný PIN!');
+    // Shake
+    document.getElementById('verifyDots').style.animation = 'none';
+    setTimeout(() => {
+      const dots = document.getElementById('verifyDots');
+      dots.style.transition = 'transform .1s';
+      [0,1,2,1,0,-1,-2,-1,0].forEach((x,i) => setTimeout(() => { dots.style.transform = `translateX(${x*6}px)`; }, i*50));
+      setTimeout(() => dots.style.transform = '', 450);
+    }, 10);
+    return;
+  }
+  currentChar = selectedChar;
+  localStorage.setItem('tt_char', currentChar);
+  enterApp();
+}
+
+function updatePinDots(wrapId, dotPrefix, val) {
+  for (let i = 0; i < 4; i++) {
+    const el = document.getElementById(dotPrefix + i);
+    if (el) el.classList.toggle('filled', i < val.length);
+  }
+}
+
+function enterApp() {
+  document.getElementById('screen-onboard').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  updateTopbar();
+  loadMatches(false);
+  renderApp();
+}
+
+function logout() {
+  if (!confirm('Odhlásit se?')) return;
+  currentChar = null;
+  localStorage.removeItem('tt_char');
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-onboard').classList.add('active');
+  selectedChar = null;
+  pinEntry = ''; vPinEntry = '';
+  showCharStep();
+  renderCharGrid();
+}
+
+// ================================================================
+// TOPBAR
+// ================================================================
+function updateTopbar() {
+  const c = CHARS.find(x => x.id === currentChar);
+  if (!c) return;
+  document.getElementById('appAvatar').textContent = c.emoji;
+  document.getElementById('appName').textContent = c.short;
+  document.getElementById('appHouse').textContent = c.house;
+  const balance = calcMyBalance();
+  const chip = document.getElementById('beerChip');
+  const sign = balance >= 0 ? '+' : '';
+  chip.innerHTML = `🍺 ${sign}${balance.toFixed(1)}`;
+  chip.style.color = balance > 0 ? 'var(--green)' : balance < 0 ? 'var(--red)' : 'var(--yellow)';
+}
+
+function calcMyBalance() {
+  const bets = Object.values(getS('bets') || {});
+  const mine = bets.filter(b => b.player === currentChar);
+  const won = mine.filter(b => b.result === 'win').reduce((s,b) => s + b.winnings, 0);
+  const lost = mine.filter(b => b.result === 'loss').reduce((s,b) => s + b.amount, 0);
+  return won - lost;
+}
+
+// ================================================================
+// LOAD MATCHES via AI
+// ================================================================
+async function loadMatches(force = false) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Always fetch fresh on open — results may have changed
+  // Only use cache if explicitly not forced AND cache is <30min old
+  const cached = getS('matchCache');
+  const cacheAge = cached?.ts ? (Date.now() - cached.ts) / 1000 / 60 : 999;
+  if (!force && cached && cached.date === today && cached.matches?.length > 0 && cacheAge < 30) {
+    todayMatches = cached.matches;
+    renderMatches();
+    return;
+  }
+
+  loadingMatches = true;
+  document.getElementById('matchesContainer').innerHTML = `
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <div class="loading-text">🪄 Hledám dnešní zápasy na internetu...</div>
+    </div>`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        tools: [{ type: "web_search_20250305", name: "web_search" }],
+        messages: [{
+          role: "user",
+          content: `Najdi na internetu výsledky a program hokejového MS 2026 pro dnešek (${new Date().toLocaleDateString('cs-CZ')}). 
+          Vrať POUZE JSON array se zápasy, které se DNES (${today}) hrají nebo hrály. 
+          Každý objekt má tato pole: id (např. "cz-dk"), home, away, homeFl (emoji vlajka), awayFl, time (HH:MM), score1 (číslo nebo null), score2 (číslo nebo null), ot (boolean, true pokud bylo prodloužení).
+          Vrať POUZE platné JSON, bez textu, bez markdown bloků, jen [{ ... }].`
+        }]
+      })
+    });
+
+    const data = await response.json();
+
+    // Extract text blocks
+    const texts = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+
+    // Try parse JSON
+    let matches = null;
+    try {
+      const clean = texts.replace(/```json|```/g, '').trim();
+      const jsonMatch = clean.match(/\[[\s\S]*\]/);
+      if (jsonMatch) matches = JSON.parse(jsonMatch[0]);
+    } catch(e) {}
+
+    if (!matches || matches.length === 0) {
+      matches = getTodayFromHardcoded();
+    }
+
+    // Normalize: enrich AI data with hardcoded base (flags, names)
+    const results = getS('results') || {};
+    matches = matches.map(m => {
+      const base = ALL_MATCHES.find(x => x.id === m.id) || {};
+      return {
+        ...base, ...m,
+        homeFl: m.homeFl || base.homeFl || '🏒',
+        awayFl: m.awayFl || base.awayFl || '🏒',
+        home: m.home || base.home || '?',
+        away: m.away || base.away || '?',
+        score1: results[m.id]?.s1 ?? m.score1 ?? null,
+        score2: results[m.id]?.s2 ?? m.score2 ?? null,
+        ot: results[m.id]?.ot ?? m.ot ?? false,
+      };
+    });
+
+    todayMatches = matches;
+    fbSave('matchCache', { date: today, matches, ts: Date.now() });
+    renderMatches();
+
+  } catch(e) {
+    // Fallback
+    todayMatches = getTodayFromHardcoded();
+    renderMatches();
+    showToast('⚠️ Offline — zobrazuji uložená data');
+  }
+
+  loadingMatches = false;
+}
+
+function getTodayFromHardcoded() {
+  const today = new Date();
+  const dd = today.getDate();
+  const mm = today.getMonth() + 1;
+  const dateStr = `${dd}.${mm}.`;
+  const results = getS('results') || {};
+  const found = ALL_MATCHES.filter(m => m.date === dateStr);
+  const fallback = found.length > 0 ? found : ALL_MATCHES.slice(0, 4);
+  return fallback.map(m => ({
+    ...m,
+    score1: results[m.id]?.s1 ?? null,
+    score2: results[m.id]?.s2 ?? null,
+    ot: results[m.id]?.ot ?? false,
+  }));
+}
+
+// ================================================================
+// RENDER MATCHES
+// ================================================================
+function renderMatches() {
+  const container = document.getElementById('matchesContainer');
+  const dateLabel = document.getElementById('matchDateLabel');
+  const bets = getS('bets') || {};
+  const myBets = Object.values(bets).filter(b => b.player === currentChar);
+
+  if (todayMatches.length === 0) {
+    dateLabel.textContent = 'Dnes žádné zápasy';
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🏒</div>
+      <div class="empty-title">Dnes nepokáme</div>
+      <div class="empty-sub">Žádné zápasy na dnešní den</div>
+    </div>`;
+    return;
+  }
+
+  const today = new Date().toLocaleDateString('cs-CZ');
+  dateLabel.textContent = `${today} · ${todayMatches.length} zápas${todayMatches.length > 1 ? 'y' : ''}`;
+
+  container.innerHTML = todayMatches.map(m => {
+    const isFinished = m.score1 !== null && m.score2 !== null;
+    const myBet = myBets.find(b => b.matchId === m.id);
+    const hasBet = !!myBet;
+    const players = MATCH_PLAYERS[m.id] || [];
+
+    const scoreBlock = isFinished
+      ? `<div class="match-score">${m.score1}<span style="color:var(--muted)">:</span>${m.score2}</div>
+         <div class="match-ot">${m.ot ? 'P/N' : ''}</div>`
+      : `<div class="match-vs">VS</div>`;
+
+    const pillClass = isFinished ? 'pill-done' : 'pill-upcoming';
+    const pillText = isFinished ? '✓ Hotovo' : `⏰ ${m.time}`;
+
+    const isCz = m.home === 'Česko' || m.away === 'Česko';
+
+    // Bet area
+    let betAreaHtml = '';
+    if (hasBet) {
+      const scoreText = `${myBet.homeScore}:${myBet.awayScore}`;
+      const scorerText = myBet.scorer ? ` · Střelec: ${myBet.scorer}` : '';
+      betAreaHtml = `<div class="bet-area">
+        <div class="my-bet-preview">
+          <span>✓ Tvůj tip: ${scoreText}${scorerText}</span>
+          ${!isFinished ? `<button class="edit-bet-btn" onclick="editBet('${m.id}')">Změnit</button>` : ''}
+        </div>
+        ${myBet.result !== 'pending' ? `<div style="margin-top:8px;font-size:0.8rem;font-weight:700;color:${myBet.result==='win'?'var(--green)':'var(--red)'}">
+          ${myBet.result === 'win' ? `🥳 Výhra +${myBet.winnings?.toFixed(1)}🍺` : `😭 Prohra -${myBet.amount}🍺`}
+        </div>` : ''}
+      </div>`;
+    } else if (!isFinished) {
+      const scorerChips = players.map(p =>
+        `<div class="scorer-chip" id="sc-${m.id}-${p.replace(/[^a-z]/gi,'_')}" onclick="toggleScorer('${m.id}','${p}')">${p}</div>`
+      ).join('');
+
+      betAreaHtml = `<div class="bet-area" id="betarea-${m.id}">
+        <div class="bet-area-title">Tvůj tip</div>
+        <div class="score-inputs">
+          <div class="score-input-wrap">
+            <span class="score-input-label">${m.homeFl} ${m.home}</span>
+            <input class="score-input" type="number" id="si1-${m.id}" placeholder="0" min="0" max="25" oninput="onScoreInput('${m.id}')"/>
+          </div>
+          <span class="score-sep">:</span>
+          <div class="score-input-wrap">
+            <span class="score-input-label">${m.awayFl} ${m.away}</span>
+            <input class="score-input" type="number" id="si2-${m.id}" placeholder="0" min="0" max="25" oninput="onScoreInput('${m.id}')"/>
+          </div>
+        </div>
+        ${players.length > 0 ? `<div class="scorer-section">
+          <div class="scorer-label">🎯 Kdo dá gól? (bonus 2🍺)</div>
+          <div class="scorer-chips" id="scorerchips-${m.id}">${scorerChips}</div>
+        </div>` : ''}
+        <button class="submit-bet-btn" id="submitbtn-${m.id}" onclick="submitBet('${m.id}')" disabled>
+          Potvrdit tip
+        </button>
+      </div>`;
+    }
+
+    return `<div class="match-card ${hasBet ? 'has-bet' : ''}" id="mc-${m.id}">
+      <div class="match-head">
+        <span class="match-time">📅 ${m.date || ''} ${m.time || ''}</span>
+        <span class="match-pill ${pillClass}">${pillText}</span>
+      </div>
+      <div class="match-teams">
+        <div class="match-team">
+          <span class="match-flag">${m.homeFl}</span>
+          <div class="match-team-name ${m.home==='Česko'?'cz':''}">${m.home}</div>
+        </div>
+        <div class="match-score-block">${scoreBlock}</div>
+        <div class="match-team">
+          <span class="match-flag">${m.awayFl}</span>
+          <div class="match-team-name ${m.away==='Česko'?'cz':''}">${m.away}</div>
+        </div>
+      </div>
+      ${betAreaHtml}
+    </div>`;
+  }).join('');
+}
+
+// ================================================================
+// BETTING
+// ================================================================
+const scorerSelections = {}; // matchId -> player name
+
+function toggleScorer(matchId, player) {
+  if (scorerSelections[matchId] === player) {
+    delete scorerSelections[matchId];
+    document.querySelectorAll(`#scorerchips-${matchId} .scorer-chip`).forEach(c => c.classList.remove('sel'));
+  } else {
+    scorerSelections[matchId] = player;
+    document.querySelectorAll(`#scorerchips-${matchId} .scorer-chip`).forEach(c => c.classList.remove('sel'));
+    const safe = player.replace(/[^a-z]/gi,'_');
+    document.getElementById(`sc-${matchId}-${safe}`)?.classList.add('sel');
+  }
+}
+
+function onScoreInput(matchId) {
+  const v1 = document.getElementById(`si1-${matchId}`)?.value;
+  const v2 = document.getElementById(`si2-${matchId}`)?.value;
+  const btn = document.getElementById(`submitbtn-${matchId}`);
+  if (btn) btn.disabled = v1 === '' || v2 === '';
+}
+
+function submitBet(matchId) {
+  const v1 = parseInt(document.getElementById(`si1-${matchId}`)?.value);
+  const v2 = parseInt(document.getElementById(`si2-${matchId}`)?.value);
+  if (isNaN(v1) || isNaN(v2)) { showToast('Zadej skóre!'); return; }
+
+  const scorer = scorerSelections[matchId] || null;
+  const betId = `bet_${currentChar}_${matchId}_${Date.now()}`;
+  const betData = {
+    player: currentChar,
+    matchId,
+    homeScore: v1,
+    awayScore: v2,
+    scorer,
+    amount: 1,
+    result: 'pending',
+    winnings: 0,
+    ts: Date.now()
+  };
+  fbSave('bets/' + betId, betData);
+  delete scorerSelections[matchId];
+  showToast(`✅ Tip uložen: ${v1}:${v2}${scorer ? ` + ${scorer}` : ''} 🍺`);
+}
+
+function editBet(matchId) {
+  const bets = getS('bets') || {};
+  const betId = Object.keys(bets).find(k => bets[k].player === currentChar && bets[k].matchId === matchId);
+  if (betId) fbSave('bets/' + betId, null);
+  renderMatches();
+}
+
+// ================================================================
+// EVALUATE BETS (admin)
+// ================================================================
+function adminEvaluate() {
+  const bets = getS('bets') || {};
+  const results = getS('results') || {};
+  const players = Object.keys(getS('players') || {});
+  let count = 0;
+
+  for (const [betId, bet] of Object.entries(bets)) {
+    if (bet.result !== 'pending') continue;
+    const res = results[bet.matchId];
+    if (!res) continue;
+
+    const { s1, s2 } = res;
+    // Score closeness scoring
+    const actualDiff = s1 - s2;
+    const predictedDiff = bet.homeScore - bet.awayScore;
+
+    // Points calculation:
+    // Exact score: 3 beers
+    // Right outcome (W/D/L), diff within 1: 2 beers
+    // Right outcome: 1 beer
+    // Wrong outcome: lose 1 beer
+
+    const actualOutcome = s1 > s2 ? 'H' : s2 > s1 ? 'A' : 'D';
+    const predictedOutcome = bet.homeScore > bet.awayScore ? 'H' : bet.awayScore > bet.homeScore ? 'A' : 'D';
+
+    let winnings = 0;
+    let result = 'loss';
+
+    if (bet.homeScore === s1 && bet.awayScore === s2) {
+      // Exact!
+      winnings = 3;
+      result = 'win';
+    } else if (actualOutcome === predictedOutcome) {
+      const diffError = Math.abs(actualDiff - predictedDiff);
+      winnings = diffError <= 1 ? 2 : 1;
+      result = 'win';
+    }
+
+    // Scorer bonus
+    if (bet.scorer) {
+      // We can't auto-verify scorer without data, admin can do it manually
+      // For now just mark scorer bet as pending separately
+    }
+
+    fbSave('bets/' + betId + '/result', result);
+    fbSave('bets/' + betId + '/winnings', winnings);
+    count++;
+  }
+
+  showToast(`⚡ Vyhodnoceno ${count} sázek!`);
+}
+
+// ================================================================
+// LEADERBOARD
+// ================================================================
+function renderLeaderboard() {
+  const bets = Object.values(getS('bets') || {});
+  const players = getS('players') || {};
+  const container = document.getElementById('lbContainer');
+  const houseBar = document.getElementById('houseBar');
+
+  if (Object.keys(players).length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🏆</div><div class="empty-title">Zatím nikdo nehraje</div></div>`;
+    return;
+  }
+
+  const stats = Object.values(players).map(p => {
+    const myBets = bets.filter(b => b.player === p.charId);
+    const wins = myBets.filter(b => b.result === 'win').length;
+    const losses = myBets.filter(b => b.result === 'loss').length;
+    const pending = myBets.filter(b => b.result === 'pending').length;
+    const earned = myBets.filter(b => b.result === 'win').reduce((s,b) => s + (b.winnings||0), 0);
+    const lost = myBets.filter(b => b.result === 'loss').reduce((s,b) => s + (b.amount||0), 0);
+    const net = earned - lost;
+    return { ...p, wins, losses, pending, net };
+  }).sort((a,b) => b.net - a.net || b.wins - a.wins);
+
+  // House totals
+  const houseTotals = { g:0, h:0, r:0, s:0 };
+  stats.forEach(s => { if (houseTotals[s.hk] !== undefined) houseTotals[s.hk] += Math.max(0, s.net); });
+  houseBar.innerHTML = Object.entries({ g:'Nebelvír', h:'Mrzimor', r:'Havraspár', s:'Zmijozel' }).map(([k, name]) => {
+    const pts = houseTotals[k];
+    return `<div class="house-chip">
+      <span class="pts ${HCLASS[k]}">${pts.toFixed(1)}🍺</span>
+      ${name}
+    </div>`;
+  }).join('');
+
+  if (stats.length === 0) { container.innerHTML = ''; return; }
+
+  const medals = ['🥇','🥈','🥉'];
+  const [top, ...rest] = stats;
+
+  const netColor = n => n > 0 ? 'var(--green)' : n < 0 ? 'var(--red)' : 'var(--muted)';
+  const sign = n => n >= 0 ? '+' : '';
+
+  container.innerHTML = `
+    <div class="lb-card">
+      <div class="lb-top">
+        <div class="lb-top-rank">🥇</div>
+        <div style="font-size:2rem">${top.emoji}</div>
+        <div class="lb-top-info">
+          <div class="lb-top-name">${top.name}</div>
+          <div class="lb-top-sub">✓${top.wins} výher · ✗${top.losses} proher · ⏳${top.pending}</div>
+        </div>
+        <div class="lb-top-score">${sign(top.net)}${top.net.toFixed(1)}🍺</div>
+      </div>
+      ${rest.map((s, i) => `<div class="lb-row">
+        <div class="lb-row-rank">${i < 2 ? medals[i+1] : i+2}</div>
+        <div class="lb-row-emoji">${s.emoji}</div>
+        <div class="lb-row-info">
+          <div class="lb-row-name">${s.name}</div>
+          <div class="lb-row-sub">${s.house} · ✓${s.wins} ✗${s.losses} ⏳${s.pending}</div>
+        </div>
+        <div class="lb-row-score" style="color:${netColor(s.net)}">${sign(s.net)}${s.net.toFixed(1)}🍺</div>
+      </div>`).join('')}
+    </div>`;
+}
+
+// ================================================================
+// DEBTS
+// ================================================================
+function renderDebts() {
+  const container = document.getElementById('debtsContainer');
+  const bets = Object.values(getS('bets') || {});
+  const players = Object.keys(getS('players') || {});
+
+  if (players.length < 2) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">💸</div><div class="empty-title">Potřeba alespoň 2 hráče</div></div>`;
+    return;
+  }
+
+  // Balance
+  const balance = {};
+  players.forEach(p => { balance[p] = 0; });
+  bets.forEach(b => {
+    if (!balance.hasOwnProperty(b.player)) return;
+    if (b.result === 'win') {
+      const w = b.winnings || 0;
+      players.filter(p => p !== b.player).forEach(p => { balance[p] -= w/(players.length-1); balance[b.player] += w/(players.length-1); });
+    } else if (b.result === 'loss') {
+      const amt = b.amount || 1;
+      players.filter(p => p !== b.player).forEach(p => { balance[p] += amt/(players.length-1); balance[b.player] -= amt/(players.length-1); });
+    }
+  });
+
+  // Splitwise
+  const debts = [];
+  const pos = [], neg = [];
+  for (const [p, bal] of Object.entries(balance)) {
+    if (bal > 0.05) pos.push({p, v: bal});
+    else if (bal < -0.05) neg.push({p, v: -bal});
+  }
+  pos.sort((a,b) => b.v-a.v); neg.sort((a,b) => b.v-a.v);
+  let i=0,j=0;
+  while(i<pos.length && j<neg.length) {
+    const amt = Math.min(pos[i].v, neg[j].v);
+    debts.push({ from: neg[j].p, to: pos[i].p, amount: amt });
+    pos[i].v -= amt; neg[j].v -= amt;
+    if(pos[i].v<0.05) i++; if(neg[j].v<0.05) j++;
+  }
+
+  const charName = id => { const c = CHARS.find(x => x.id === id); return c ? `${c.emoji} ${c.short}` : id; };
+  const netColor = n => n > 0 ? 'balance-pos' : n < 0 ? 'balance-neg' : 'balance-zero';
+  const sign = n => n >= 0 ? '+' : '';
+
+  let html = '';
+  if (debts.length === 0) {
+    html += `<div class="empty-state"><div class="empty-icon">🥂</div><div class="empty-title">Zatím žádné dluhy!</div><div class="empty-sub">Tipujte a uvidíme...</div></div>`;
+  } else {
+    debts.forEach(d => {
+      html += `<div class="debt-card">
+        <div class="debt-avatars">${charName(d.from).split(' ')[0]} → ${charName(d.to).split(' ')[0]}</div>
+        <div class="debt-info">
+          <div class="debt-names">${charName(d.from)} dluží ${charName(d.to)}</div>
+        </div>
+        <div>
+          <div class="debt-amount">${d.amount.toFixed(1)}🍺</div>
+          <button class="settle-btn" onclick="showToast('✅ Zaznamenáno!')">Zaplaceno</button>
+        </div>
+      </div>`;
+    });
+  }
+
+  // Balance overview
+  html += `<div style="font-size:0.75rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:16px 0 10px">Celkové bilance</div>`;
+  Object.entries(balance).sort((a,b) => b[1]-a[1]).forEach(([p, bal]) => {
+    html += `<div class="debt-card">
+      <div style="font-size:1.4rem">${CHARS.find(c=>c.id===p)?.emoji||'?'}</div>
+      <div class="debt-info"><div class="debt-names">${charName(p)}</div></div>
+      <div class="debt-amount ${netColor(bal)}">${sign(bal)}${bal.toFixed(1)}🍺</div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+// ================================================================
+// DIARY
+// ================================================================
+async function generateDiary() {
+  const btn = document.getElementById('genDiaryBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;margin:0;display:inline-block;vertical-align:middle;margin-right:8px"></div> Pero píše...';
+
+  const today = new Date().toLocaleDateString('cs-CZ');
+  const bets = Object.values(getS('bets') || {});
+  const results = getS('results') || {};
+
+  // Match context
+  const matchCtx = todayMatches.map(m => {
+    const r = results[m.id];
+    if (r) return `${m.home} vs ${m.away}: ${r.s1}:${r.s2}${r.ot?' (P/N)':''}`;
+    return `${m.home} vs ${m.away}: ještě neodehráno`;
+  }).join(', ');
+
+  // Player context
+  const playerCtx = CHARS.map(c => {
+    const myBets = bets.filter(b => b.player === c.id);
+    if (!myBets.length) return null;
+    const tips = myBets.map(b => {
+      const win = b.result === 'win' ? `výhra +${b.winnings}🍺` : b.result === 'loss' ? `prohra -${b.amount}🍺` : `tip ${b.homeScore}:${b.awayScore}`;
+      return win;
+    }).join(', ');
+    return `${c.name}: ${tips}`;
+  }).filter(Boolean).join('\n');
+
+  const prompt = `Jsi tajný Deník z Bradavic. Napiš DNES (${today}) vtipný, dramatický zápis o hokejovém MS 2026 ve Švýcarsku.
+
+Nejdřív prohledej internet a zjisti dnešní výsledky zápasů MS hokej 2026.
+
+Výsledky co máme: ${matchCtx}
+Hráči a jejich tipy: ${playerCtx || 'Zatím nikdo netipoval'}
+
+Pravidla:
+- Piš jako HP magický deník, cca 250 slov
+- Hokejoví hráči = kouzelníci, góly = kouzla, brankáři = ochranné štíty, puk = Zlatonoh
+- Zapoj postavy z naší skupiny jmenovitě — ukaž kdo tipoval dobře/špatně
+- Buď vtipný a dramatický, odkazuj na Bradavice
+- Česky, bez formátování, jen čistý příběh
+- Zakonči proroctvím pro zítřek`;
+
+  try {
+    const r1 = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 800,
+        tools: [{ type: "web_search_20250305", name: "web_search" }],
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const d1 = await r1.json();
+    let text = (d1.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+
+    if (!text || text.length < 50) {
+      const r2 = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 800,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+      const d2 = await r2.json();
+      text = (d2.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    }
+
+    const diaryId = `diary_${Date.now()}`;
+    fbSave('diary/' + diaryId, { text, date: today, ts: Date.now() });
+    renderDiary();
+
+  } catch(e) {
+    showToast('❌ Chyba při generování: ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '🪄 Vygenerovat znovu';
+}
+
+function renderDiary() {
+  const diaries = Object.entries(getS('diary') || {}).sort((a,b) => b[1].ts - a[1].ts);
+  const container = document.getElementById('diaryContainer');
+  if (diaries.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">✒️</div><div class="empty-title">Zatím žádný zápis</div><div class="empty-sub">Klikni výše a prorocké pero začne psát</div></div>`;
+    return;
+  }
+  container.innerHTML = diaries.slice(0,5).map(([id, d]) => `
+    <div class="diary-card">
+      <div class="diary-header">
+        <div class="diary-date">📅 ${d.date}</div>
+        <div class="diary-title">Zápis z Bradavického archivu</div>
+      </div>
+      <div class="diary-body">${d.text}</div>
+    </div>`).join('');
+}
+
+// ================================================================
+// ADMIN
+// ================================================================
+function renderAdmin() {
+  const sel = document.getElementById('adminMatchSel');
+  const results = getS('results') || {};
+  sel.innerHTML = ALL_MATCHES.map(m => {
+    const r = results[m.id];
+    return `<option value="${m.id}">${m.homeFl}${m.home} vs ${m.awayFl}${m.away} · ${m.date}${r ? ` (${r.s1}:${r.s2})` : ''}</option>`;
+  }).join('');
+}
+
+function adminSaveResult() {
+  const matchId = document.getElementById('adminMatchSel').value;
+  const s1 = parseInt(document.getElementById('adminS1').value);
+  const s2 = parseInt(document.getElementById('adminS2').value);
+  const ot = document.getElementById('adminOT').checked;
+  if (isNaN(s1) || isNaN(s2)) { showToast('Zadej platné skóre!'); return; }
+  fbSave('results/' + matchId, { s1, s2, ot });
+  // Update today matches cache
+  todayMatches = todayMatches.map(m => m.id === matchId ? { ...m, score1: s1, score2: s2, ot } : m);
+  renderMatches();
+  showToast(`✅ Uloženo: ${s1}:${s2}`);
+}
+
+function adminReset() {
+  if (!confirm('Vymazat vše?')) return;
+  if (!confirm('Opravdu?')) return;
+  if (window.$fbReady) window.$set(window.$ref(window.$db, 'tabortipuje'), null);
+  localStorage.removeItem('tt_local');
+  $state = {};
+  renderApp();
+  showToast('🗑️ Reset hotov');
+}
+
+// ================================================================
+// NAV
+// ================================================================
+function navTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page)?.classList.add('active');
+  const pages = ['home','lb','debts','diary','admin'];
+  document.querySelectorAll('.nav-item')[pages.indexOf(page)]?.classList.add('active');
+}
+
+// ================================================================
+// RENDER APP
+// ================================================================
+function renderApp() {
+  if (!currentChar) return;
+  updateTopbar();
+  renderMatches();
+  renderLeaderboard();
+  renderDebts();
+  renderDiary();
+  renderAdmin();
+  renderCharGrid();
+}
+
+// ================================================================
+// TOAST
+// ================================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
